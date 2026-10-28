@@ -11,7 +11,12 @@
   const STATUS = { on: 'Online', typing: 'schreibt …', rec: 'nimmt auf …', off: 'Offline' };
   function setStatus(k) { statusEl.className = k; statusEl.querySelector('em').textContent = STATUS[k]; }
   const clock = () => new Date().toLocaleTimeString('de-CH', { hour: '2-digit', minute: '2-digit' });
-  const down = () => chat.scrollTo({ top: chat.scrollHeight, behavior: FAST < 1 ? 'auto' : 'smooth' });
+  // Chat bleibt unten kleben: neue Blasen rollen weich nach, und wenn sich die Höhe des Chats ändert
+  // (Auswahl erscheint/verschwindet, Karte klappt), wird sofort nachgezogen, damit nichts springt.
+  let pinned = true;
+  chat.addEventListener('scroll', () => { pinned = chat.scrollHeight - chat.scrollTop - chat.clientHeight < 90; }, { passive: true });
+  const down = () => { pinned = true; chat.scrollTo({ top: chat.scrollHeight, behavior: FAST < 1 ? 'auto' : 'smooth' }); };
+  if (window.ResizeObserver) new ResizeObserver(() => { if (pinned) chat.scrollTop = chat.scrollHeight; }).observe(chat);
 
   function el(tag, cls, text) {
     const e = document.createElement(tag);
@@ -79,9 +84,11 @@
   async function mikeSays(text, id) {
     if (id !== runId) return;
     setStatus('typing'); const t = typingBubble(); fx().typing?.();
-    await sleep(typeTime(text)); t.remove();
-    if (id !== runId) return;
-    bubble(text, 'mike'); setStatus('on'); fx().msgIn?.(); (navigator.userActivation?.hasBeenActive && navigator.vibrate?.(18));
+    await sleep(typeTime(text));
+    if (id !== runId) { t.remove(); return; }
+    // Die Tipp-Blase wird an Ort und Stelle zur Nachricht (kein Entfernen und Neueinfügen, daher kein Springen)
+    t.className = 'msg mike morphed'; t.replaceChildren(el('span', 'txt', text), el('time', '', clock())); down();
+    setStatus('on'); fx().msgIn?.(); (navigator.userActivation?.hasBeenActive && navigator.vibrate?.(18));
     await speak(text, 'mike'); await sleep(320);
   }
 
@@ -132,9 +139,11 @@
   $('#go').onclick = () => {
     sound = $('#sound').checked; $('#snd').textContent = sound ? 'Ton an' : 'Ton aus';
     fx().start?.(sound && FAST >= 1); $('#intro').classList.add('gone'); run(window.STORY.start);
+    // Hinweis, falls der Browser den Ton blockiert (z. B. Stumm-Schalter am Handy)
+    if (sound && FAST >= 1) setTimeout(() => { const st = fx().state?.(); if (st && st !== 'running') note('Kein Ton? Stumm-Schalter am Handy und Lautstärke prüfen, dann «Ton an» tippen.'); }, 900);
   };
   $('#snd').onclick = () => {
     sound = !sound; $('#snd').textContent = sound ? 'Ton an' : 'Ton aus';
-    if (!sound) fx().mute?.(!sound);
+    fx().mute?.(!sound); if (sound) fx().msgIn?.(); // kurzer Ton zur Kontrolle
   };
 })();

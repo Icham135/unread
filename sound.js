@@ -19,10 +19,22 @@ window.RaffiSound = (() => {
 
   // iPhone/Safari: Audio-Elemente dürfen nur nach einem Fingertipp starten. Wir "entsperren" sie beim ersten Tippen
   // und benutzen sie danach immer wieder (neue Datei laden, abspielen).
-  const SILENT = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAIlYAAESsAAACABAAZGF0YQAAAAA=';
+  // Eine echte, kurze stille WAV-Datei (null Samples werden von iOS nicht als Wiedergabe gezählt)
+  const SILENT = (() => {
+    try {
+      const n = 8000, buf = new ArrayBuffer(44 + n * 2), v = new DataView(buf), w = (o, t) => { for (let i = 0; i < t.length; i++) v.setUint8(o + i, t.charCodeAt(i)); };
+      w(0, 'RIFF'); v.setUint32(4, 36 + n * 2, true); w(8, 'WAVE'); w(12, 'fmt '); v.setUint32(16, 16, true); v.setUint16(20, 1, true);
+      v.setUint16(22, 1, true); v.setUint32(24, 8000, true); v.setUint32(28, 16000, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true);
+      w(36, 'data'); v.setUint32(40, n * 2, true);
+      return URL.createObjectURL(new Blob([buf], { type: 'audio/wav' }));
+    } catch (e) { return ''; }
+  })();
+  let loopEl = null;
   let memoEl = null, sfxIdx = 0; const sfxPool = [];
   function unlockAudio() {
     try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) {}
+    // iPhone: Solange ein (stilles) Medium läuft, hört man Web-Audio auch bei aktivem Stumm-Schalter
+    try { if (SILENT) { if (!loopEl) { loopEl = new Audio(SILENT); loopEl.loop = true; loopEl.volume = .02; } const p = loopEl.play(); if (p && p.catch) p.catch(() => {}); } } catch (e) {}
     const warm = e => { try { e.src = SILENT; e.volume = .01; const p = e.play(); if (p && p.then) p.then(() => e.pause(), () => {}); } catch (x) {} };
     try { if (!memoEl) memoEl = new Audio(); warm(memoEl); } catch (e) {}
     try { while (sfxPool.length < 3) { const e = new Audio(); sfxPool.push(e); warm(e); } } catch (e) {}
@@ -178,6 +190,7 @@ window.RaffiSound = (() => {
       startAmbient();
     }),
 
+    state: () => (ctx ? ctx.state : 'none'),
     mute: safe(stumm => {
       if (stumm) stopSfx();
       muted = !!stumm;

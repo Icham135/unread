@@ -92,3 +92,7 @@
   .map-sym.map-pop .map-pin,.map-dot .map-pin{transform:rotateZ(calc(var(--b) * -1)) rotateX(calc(var(--a) * -1)) translateZ(40px)}
 .map-dot.map-in{animation:none}
 }
+
+/* Tab der Etage, in der Mike gerade ist */
+.map-tab.map-here{position:relative}
+.map-tab.map-here::after{content:"";position:absolute;top:3px;right:4px;width:6px;height:6px;border-radius:50%;background:#e0566a;box-shadow:0 0 6px #e0566a}

@@ -104,7 +104,7 @@
     const src = (document.currentScript && document.currentScript.src) || '';
     const link = document.createElement('link');
     link.rel = 'stylesheet';
-    link.href = src ? src.replace(/map\.js(\?.*)?$/, 'map.css') : 'map.css';
+    link.href = (src ? src.replace(/map\.js(\?.*)?$/, 'map.css') : 'map.css') + '?v=4';
     document.head.append(link);
   } catch (e) { /* ohne CSS weiter */ }
 
@@ -118,7 +118,7 @@
   const titleSub = $('span', 'map-where', title); titleSub.textContent = '';
   const tabs = $('div', 'map-tabs', head);
   tabs.setAttribute('role', 'group'); tabs.setAttribute('aria-label', 'Ansicht');
-  const MODES = [['all', 'Alle'], ['og', 'OG'], ['eg', 'EG'], ['keller', 'Keller']];
+  const MODES = [['og', 'OG'], ['eg', 'EG'], ['keller', 'Keller']];
   const tabBtn = {};
   MODES.forEach(([m, label]) => {
     const b = $('button', 'map-tab', tabs); b.type = 'button'; b.textContent = label; b.dataset.mode = m;
@@ -186,7 +186,7 @@
   // ---------------------------------------------------------------------------
   // Zustand
   // ---------------------------------------------------------------------------
-  let mode = 'all', compact = false;
+  let mode = 'eg', compact = false, autoFloor = null;
   let visited, trail, found, symEls, pendingFloor, curFloor, curToken, curRoom, pos, tween, ghostRoom, timers, lastFlags;
   function freshState() {
     visited = new Set(); trail = []; found = new Map(); pendingFloor = null; curFloor = 'eg'; curToken = 'eingang';
@@ -447,6 +447,9 @@
     else if (KEEP_FLOOR.has(id)) fl = curFloor;
     else fl = 'eg';
     curFloor = fl;
+    // Die Etage, in der Mike gerade ist, wird automatisch gezeigt; wer will, kann freiwillig eine andere ansehen
+    MODES.forEach(([k]) => tabBtn[k].classList.toggle('map-here', k === fl));
+    if (autoFloor !== fl) { autoFloor = fl; if (mode !== fl) setMode(fl); }
     if (NODE_ROOM[id]) curToken = NODE_ROOM[id];
     const to = resolveRoom(fl, curToken);
     const from = curRoom;
@@ -496,11 +499,12 @@
   function reset() {
     timers.forEach(clearTimeout);
     if (tween) cancelAnimationFrame(tween.raf);
-    freshState();
+    freshState(); autoFloor = null;
     ghost.classList.remove('map-gshow'); ghost.classList.add('map-hidden');
     dot.style.display = 'none';
     titleSub.textContent = '';
-    drawTrail(null); drawAllFog(); layoutPlates(); syncFloorGlow(1);
+    drawTrail(null); drawAllFog(); setMode('eg'); syncFloorGlow(1);
+    MODES.forEach(([k]) => tabBtn[k].classList.toggle('map-here', k === 'eg'));
   }
 
   // ---------------------------------------------------------------------------
@@ -508,8 +512,7 @@
   // ---------------------------------------------------------------------------
   function setMode(m) {
     mode = m;
-    MODES.forEach(([k]) => tabBtn[k].classList.toggle('map-act', k === m));
-    tabBtn.all.setAttribute('aria-pressed', m === 'all');
+    MODES.forEach(([k]) => { tabBtn[k].classList.toggle('map-act', k === m); tabBtn[k].setAttribute('aria-pressed', k === m); });
     view.classList.add('map-swap');
     layoutPlates(); placeSyms();
     if (pos) place(dot, pos.fi, pos.x, pos.y, 3);
@@ -579,7 +582,8 @@
   // Start
   host.dataset.open = 'true';
   fold.setAttribute('aria-expanded', 'true');
-  setMode('all');
+  setMode('eg');
+  MODES.forEach(([k]) => tabBtn[k].classList.toggle('map-here', k === 'eg'));
   drawAllFog(); drawTrail(null);
   window.RaffiMap = { go, hint, reset };
 })();
