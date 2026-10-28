@@ -17,14 +17,28 @@ window.RaffiSound = (() => {
     hintertuer: .88, weitergehen: .6, kerzen: .9, geraeusch: .93, bleiben: 1
   };
 
+  // iPhone/Safari: Audio-Elemente dürfen nur nach einem Fingertipp starten. Wir "entsperren" sie beim ersten Tippen
+  // und benutzen sie danach immer wieder (neue Datei laden, abspielen).
+  const SILENT = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAIlYAAESsAAACABAAZGF0YQAAAAA=';
+  let memoEl = null, sfxIdx = 0; const sfxPool = [];
+  function unlockAudio() {
+    try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) {}
+    const warm = e => { try { e.src = SILENT; e.volume = .01; const p = e.play(); if (p && p.then) p.then(() => e.pause(), () => {}); } catch (x) {} };
+    try { if (!memoEl) memoEl = new Audio(); warm(memoEl); } catch (e) {}
+    try { while (sfxPool.length < 3) { const e = new Audio(); sfxPool.push(e); warm(e); } } catch (e) {}
+    try { if (ctx && ctx.state === 'suspended') ctx.resume(); } catch (e) {}
+  }
+  ['pointerdown', 'touchend', 'keydown'].forEach(ev => document.addEventListener(ev, unlockAudio, { once: true, passive: true }));
+
   // Echte Geräusch-Dateien (audio/sfx-*.mp3) abspielen; fehlt die Datei, läuft die Synthese als Ersatz.
   const synth = { mechanical: false, creak: false, door: false };
   const sfxEls = new Set();
   function playSfx(file, vol, fallback) {
-    let el; try { el = new Audio('audio/' + file); } catch (e) { return fallback(); }
-    el.volume = vol; sfxEls.add(el);
+    let el; try { el = sfxPool.length ? sfxPool[sfxIdx++ % sfxPool.length] : new Audio(); } catch (e) { return fallback(); }
+    try { el.pause(); el.src = 'audio/' + file; el.currentTime = 0; el.volume = vol; } catch (e) { return fallback(); }
+    sfxEls.add(el);
     const fail = () => { sfxEls.delete(el); fallback(); };
-    el.addEventListener('error', fail); el.addEventListener('ended', () => sfxEls.delete(el));
+    el.onerror = fail; el.onended = () => sfxEls.delete(el);
     const p = el.play(); if (p && p.catch) p.catch(fail);
   }
   function stopSfx() { sfxEls.forEach(e => { try { e.pause(); } catch (x) {} }); sfxEls.clear(); }
@@ -154,6 +168,7 @@ window.RaffiSound = (() => {
   // ---------- Öffentliche Funktionen ----------
   const api = {
     start: safe((anAus = true) => {
+      unlockAudio();
       if (started) { if (ctx && ctx.state === 'suspended') ctx.resume(); return; }
       if (!build()) return;
       started = true; muted = !anAus;
@@ -267,18 +282,18 @@ window.RaffiSound = (() => {
       });
       // Zuerst echte Aufnahme versuchen, sonst Platzhalter.
       let el;
-      try { el = new Audio('audio/memo-' + name + '.mp3'); } catch (e) { el = null; }
+      try { el = memoEl || new Audio(); el.pause(); el.src = 'audio/memo-' + name + '.mp3'; el.currentTime = 0; } catch (e) { el = null; }
       if (!el) { placeholder(m, name); return m.done; }
       el.muted = muted; el.volume = .9; el.preload = 'auto';
       m.el = el;
       let decided = false;
       const fallback = () => { if (decided) return; decided = true; m.el = null; placeholder(m, name); };
-      el.addEventListener('error', fallback);
-      el.addEventListener('canplay', () => {
+      el.onerror = fallback;
+      el.oncanplay = () => {
         if (decided) return; decided = true;
         const p = el.play(); if (p && p.catch) p.catch(() => { m.el = null; placeholder(m, name); });
-      });
-      el.addEventListener('ended', m.finish);
+      };
+      el.onended = m.finish;
       m.timers.push(setTimeout(() => { if (!decided) fallback(); }, 2500)); // Datei lädt nicht (z. B. nicht vorhanden)
       return m.done;
     }),
