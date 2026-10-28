@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="de-CH">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b0b0d">
+<title>Unread</title>
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="map.css">
+</head>
+<body>
+<div id="app">
+  <header id="top">
+    <div class="av" aria-hidden="true">M</div>
+    <div class="who"><b>Mike</b><span id="status" class="on" role="status"><i></i><em>Online</em></span></div>
+    <button id="snd" aria-label="Ton an oder aus">Ton an</button>
+  </header>
+  <aside id="map" aria-label="Karte des Hauses"></aside>
+  <main id="chat" aria-live="polite" tabindex="-1"></main>
+  <footer id="bar"><div id="choices"></div></footer>
+  <div id="intro">
+    <div class="box">
+      <h1>Un<span>read</span></h1>
+      <p class="sub">Ein Chat-Horror</p>
+      <p class="warn">Enthält Horror, Kraftausdrücke und einen Tierkadaver.</p>
+      <button id="go">Start</button>
+      <label class="chk"><input type="checkbox" id="sound" checked> Mit Ton (gesprochene Nachrichten)</label>
+    </div>
+  </div>
+</div>
+<script src="story.js"></script>
+<script src="sound.js"></script>
+<script src="map.js"></script>
+<script src="engine.js"></script>
+</body>
+</html>

@@ -1,0 +1,94 @@
+/* Hauskarte: nur das Innere von #map (Klassen map-). Äusseres Layout steht in style.css. */
+#map{display:flex;flex-direction:column;color:#ececf1;--map-red:#ff2d3d}
+#map:empty{display:none}
+#map.collapsed,#map.closed,#map[data-open="false"]{overflow:hidden}
+
+.map-head{flex:0 0 40px;height:40px;display:flex;align-items:center;gap:8px;padding:0 10px 0 12px;background:#0b0b0d;border-bottom:1px solid #1d1d24;position:relative;z-index:3}
+.map-title{flex:1;min-width:0;display:flex;align-items:baseline;gap:8px;white-space:nowrap}
+.map-title b{font-size:12px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:#9a9aa6}
+.map-where{font-size:12px;color:#d9d9e0;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.map-tabs{display:flex;gap:2px;background:#131318;border:1px solid #23232b;border-radius:14px;padding:2px}
+.map-tab{background:transparent;border:0;color:#7d7d89;font-size:11px;line-height:1;padding:6px 8px;border-radius:11px;cursor:pointer;transition:color .15s,background .15s}
+.map-tab:hover{color:#ececf1}
+.map-tab.map-act{background:#2a2a33;color:#fff}
+.map-fold{display:none;width:30px;height:30px;border-radius:50%;background:transparent;border:1px solid #30303a;cursor:pointer;place-items:center;padding:0}
+.map-fold i{width:7px;height:7px;border-right:2px solid #9a9aa6;border-bottom:2px solid #9a9aa6;transform:translateY(-2px) rotate(45deg);transition:transform .25s}
+#map.collapsed .map-fold i,#map[data-open="false"] .map-fold i{transform:translateY(2px) rotate(-135deg)}
+@media (max-width:979px){.map-fold{display:grid}}
+@media (max-width:420px){.map-where{display:none}.map-tab{padding:6px 7px}}
+
+.map-view{position:relative;flex:1 1 auto;min-height:0;overflow:hidden;isolation:isolate;background:radial-gradient(ellipse at 50% 55%,#111116 0,#060607 70%);transition:opacity .12s}
+.map-view.map-swap{opacity:.2}
+.map-shake{position:absolute;inset:0}
+.map-fit{position:absolute;left:0;top:0;width:520px;height:400px;transform-origin:0 0;perspective:2800px;perspective-origin:50% 40%;--a:58deg;--b:-20deg;transition:transform .5s ease}
+.map-stack{position:absolute;inset:0;transform-style:preserve-3d;transform:rotateX(var(--a)) rotateZ(var(--b));transform-origin:260px 200px}
+
+/* Platten */
+.map-plate{position:absolute;left:0;top:0;width:400px;height:400px;background:rgba(10,10,13,.86);outline:1px solid rgba(255,255,255,.09);transition:opacity .5s,box-shadow .5s;box-shadow:0 0 0 1px rgba(0,0,0,.6)}
+.map-plate.map-hidden{opacity:0;pointer-events:none}
+.map-plate.map-on{outline-color:rgba(255,80,95,.5);box-shadow:0 0 34px 4px rgba(255,45,61,.2),0 0 0 1px rgba(0,0,0,.6)}
+.map-plan{position:absolute;inset:0;width:100%;height:100%;object-fit:fill;mix-blend-mode:screen;opacity:1;user-select:none;pointer-events:none}
+.map-noimg{background:repeating-linear-gradient(0deg,rgba(255,255,255,.05) 0 1px,transparent 1px 40px),repeating-linear-gradient(90deg,rgba(255,255,255,.05) 0 1px,transparent 1px 40px),rgba(10,10,13,.86)}
+.map-fog{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;opacity:.96}
+.map-trail{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible}
+.map-line{fill:none;stroke:rgba(255,70,85,.75);stroke-width:1.3px;vector-effect:non-scaling-stroke;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 2px rgba(255,45,61,.8))}
+.map-dim{position:absolute;inset:0;background:#000;opacity:0;transition:opacity .6s;pointer-events:none}
+.map-plate.map-off .map-dim{opacity:.62}
+.map-plabel{position:absolute;left:8px;bottom:-22px;font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:rgba(220,220,230,.45);white-space:nowrap;transition:color .5s}
+.map-plate.map-on .map-plabel{color:rgba(255,120,130,.95)}
+
+/* Mikes Punkt */
+.map-dot,.map-sym,.map-ghost{position:absolute;left:0;top:0;width:0;height:0;transform-style:preserve-3d;pointer-events:none}
+.map-dot{transition:opacity .4s}
+.map-dot.map-hidden,.map-sym.map-hidden,.map-ghost.map-hidden{opacity:0!important;visibility:hidden}
+.map-ring{position:absolute;left:-17px;top:-17px;width:34px;height:34px;border-radius:50%;border:2px solid rgba(255,45,61,.85);box-shadow:0 0 14px 2px rgba(255,45,61,.55),inset 0 0 12px rgba(255,45,61,.4);animation:map-ring 1.8s ease-out infinite}
+.map-pin{position:absolute;left:0;top:0;width:0;height:0;transform-origin:0 0;transform:rotateZ(calc(var(--b) * -1)) rotateX(calc(var(--a) * -1))}
+.map-core{position:absolute;left:-8px;top:-30px;width:16px;height:16px;border-radius:50%;background:var(--map-red);box-shadow:0 0 12px 4px rgba(255,45,61,.85),0 0 30px 10px rgba(255,45,61,.35);animation:map-pulse 1.3s ease-in-out infinite}
+.map-stem{position:absolute;left:-.5px;top:-14px;width:1px;height:14px;background:linear-gradient(rgba(255,45,61,.9),transparent)}
+.map-dot .map-pin{transform:rotateZ(calc(var(--b) * -1)) rotateX(calc(var(--a) * -1)) translateZ(40px)}
+.map-dot.map-in{animation:map-appear .8s ease-out}
+@keyframes map-pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.28);opacity:.75}}
+@keyframes map-ring{0%{transform:scale(.4);opacity:.95}100%{transform:scale(1.8);opacity:0}}
+@keyframes map-appear{from{opacity:0}to{opacity:1}}
+
+/* Fundstücke */
+.map-sym{transition:opacity .5s}
+.map-sym.map-dimmed{opacity:.4}
+.map-badge{position:absolute;left:-23px;top:-54px;width:46px;height:46px;border-radius:50%;background:rgba(8,8,11,.9);border:1px solid rgba(255,255,255,.28);box-shadow:0 0 12px rgba(0,0,0,.9),0 0 8px rgba(255,255,255,.12);display:grid;place-items:center;isolation:isolate;overflow:hidden}
+.map-ico{display:block;background-image:url("karte/symbole.jpg");background-repeat:no-repeat;mix-blend-mode:screen}
+.map-glyph{display:none;color:#ddd;font-size:18px}
+.map-nosheet .map-ico{display:none}.map-nosheet .map-glyph{display:block}
+.map-sym.map-pop .map-pin{animation:map-pop .7s cubic-bezier(.2,1.4,.4,1)}
+@keyframes map-pop{from{opacity:0;scale:.2}to{opacity:1;scale:1}}
+.map-sym::after{content:"";position:absolute;left:-1px;top:-8px;width:2px;height:8px}
+
+/* Gestalt */
+.map-ghost{opacity:0;transition:opacity 2.4s}
+.map-ghost.map-gshow{opacity:.8}
+.map-ghost .map-badge{width:44px;height:44px;left:-22px;top:-58px;background:rgba(170,190,200,.08);border-color:rgba(190,210,225,.35);filter:blur(1.2px)}
+.map-ghost .map-ico{opacity:.7}
+.map-gcore{position:absolute;left:-6px;top:-10px;width:12px;height:12px;border-radius:50%;background:#c9d6de;box-shadow:0 0 14px 5px rgba(190,210,225,.4);filter:blur(1px);animation:map-flick 3.1s steps(1) infinite}
+@keyframes map-flick{0%,100%{opacity:.8}18%{opacity:.2}22%{opacity:.9}60%{opacity:.35}64%{opacity:.85}}
+
+/* Störung */
+.map-fx{position:absolute;inset:0;pointer-events:none;z-index:2;opacity:0}
+.map-fx i{position:absolute;inset:0;mix-blend-mode:screen;background-size:cover;background-position:center}
+.map-fx-a{background-image:url("karte/glitch.jpg")}
+.map-fx-b{background-image:url("karte/rauschen.jpg");background-size:260px 260px!important;opacity:.7}
+.map-view.map-glitch .map-fx{animation:map-flash 1s steps(1) 1}
+.map-view.map-glitch .map-shake{animation:map-jit 1s steps(1) 1}
+.map-view.map-glitch-soft .map-fx{opacity:.35;transition:opacity .2s}
+@keyframes map-flash{0%{opacity:.9}8%{opacity:0}14%{opacity:.7}20%{opacity:.1}34%{opacity:.8}40%{opacity:0}62%{opacity:.5}68%{opacity:0}82%{opacity:.35}90%{opacity:0}100%{opacity:0}}
+@keyframes map-jit{0%{transform:translate(4px,0) skewX(4deg)}8%{transform:none}14%{transform:translate(-5px,1px)}20%{transform:none}34%{transform:translate(3px,-1px) skewX(-3deg)}40%{transform:none}62%{transform:translate(-2px,0)}68%{transform:none}100%{transform:none}}
+
+.map-vignette{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at center,transparent 55%,rgba(0,0,0,.65) 100%);z-index:1}
+
+#map.collapsed .map-view,#map[data-open="false"] .map-view,#map.closed .map-view{visibility:hidden}
+
+@media (prefers-reduced-motion:reduce){
+  .map-core,.map-ring,.map-gcore{animation:none}
+  .map-ring{opacity:.5}
+  .map-fit,.map-plate,.map-sym,.map-ghost,.map-view{transition:none}
+  .map-sym.map-pop .map-pin,.map-dot .map-pin{transform:rotateZ(calc(var(--b) * -1)) rotateX(calc(var(--a) * -1)) translateZ(40px)}
+.map-dot.map-in{animation:none}
+}
