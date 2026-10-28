@@ -6,7 +6,7 @@
   const chat = $('#chat'), choicesEl = $('#choices'), statusEl = $('#status');
   const sleep = ms => new Promise(r => setTimeout(r, ms * FAST));
   const fx = () => window.RaffiSound || {};
-  let flags = {}, sound = true, voices = [], runId = 0;
+  let flags = {}, sound = true, runId = 0;
 
   const STATUS = { on: 'Online', typing: 'schreibt …', rec: 'nimmt auf …', off: 'Offline' };
   function setStatus(k) { statusEl.className = k; statusEl.querySelector('em').textContent = STATUS[k]; }
@@ -37,6 +37,7 @@
     const img = new Image();
     img.alt = LABEL[key] || key; img.src = 'fotos/' + key + '.jpg';
     img.onerror = () => { img.onerror = null; img.src = placeholder(key); };
+    img.onload = down;
     const rec = el('div', 'rec'); rec.append(el('i'), el('b', '', 'REC'), el('span', '', clock()));
     wrap.append(img, rec, el('time', '', clock()));
     chat.append(wrap); down(); fx().photo?.(); return wrap;
@@ -71,20 +72,8 @@
     chat.append(t); down(); return t;
   }
 
-  // Stimmen des Browsers (Test); später durch echte Aufnahmen ersetzbar
-  function loadVoices() { voices = (window.speechSynthesis ? speechSynthesis.getVoices() : []).filter(v => /^de/i.test(v.lang)); }
-  if (window.speechSynthesis) { loadVoices(); speechSynthesis.onvoiceschanged = loadVoices; }
-  function speak(text, who) {
-    if (!sound || FAST < 1 || !voices.length) return sleep(480);
-    return new Promise(res => {
-      const u = new SpeechSynthesisUtterance(text);
-      u.lang = 'de-DE'; u.voice = voices[who === 'me' ? Math.min(1, voices.length - 1) : 0];
-      u.pitch = who === 'me' ? 1.2 : 0.75; u.rate = 1;
-      const t = setTimeout(res, Math.max(2500, text.length * 120));
-      u.onend = u.onerror = () => { clearTimeout(t); res(); };
-      speechSynthesis.speak(u);
-    });
-  }
+  // Nur die Sprachmemos werden gesprochen; normale Nachrichten bleiben still (nur kurze Lesepause)
+  const speak = () => sleep(350);
   const typeTime = t => Math.min(2300, Math.max(750, t.length * 30));
 
   async function mikeSays(text, id) {
@@ -136,7 +125,7 @@
   function ending() {
     note('Ende des bisherigen Stands');
     const b = el('button', 'choice again', 'Nochmal von vorn');
-    b.onclick = () => { speechSynthesis?.cancel(); flags = {}; chat.replaceChildren(); window.RaffiMap?.reset?.(); setStatus('on'); run(window.STORY.start); };
+    b.onclick = () => { flags = {}; chat.replaceChildren(); window.RaffiMap?.reset?.(); setStatus('on'); run(window.STORY.start); };
     choicesEl.append(b);
   }
 
@@ -146,6 +135,6 @@
   };
   $('#snd').onclick = () => {
     sound = !sound; $('#snd').textContent = sound ? 'Ton an' : 'Ton aus';
-    if (!sound) speechSynthesis?.cancel(); fx().mute?.(!sound);
+    if (!sound) fx().mute?.(!sound);
   };
 })();
