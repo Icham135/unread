@@ -96,3 +96,9 @@
 /* Tab der Etage, in der Mike gerade ist */
 .map-tab.map-here{position:relative}
 .map-tab.map-here::after{content:"";position:absolute;top:3px;right:4px;width:6px;height:6px;border-radius:50%;background:#e0566a;box-shadow:0 0 6px #e0566a}
+
+/* Griff zum Ändern der Kartengrösse */
+.map-grip{position:absolute;left:0;right:0;bottom:0;height:26px;z-index:6;display:flex;align-items:flex-end;justify-content:center;padding-bottom:5px;cursor:ns-resize;touch-action:none;-webkit-user-select:none;user-select:none}
+.map-grip::after{content:"";width:46px;height:5px;border-radius:3px;background:rgba(255,255,255,.28);transition:background .15s,width .15s}
+.map-grip:hover::after,.map-grip:active::after{background:rgba(255,255,255,.55);width:58px}
+.collapsed .map-grip,#map[data-open="false"] .map-grip{display:none}

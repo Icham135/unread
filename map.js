@@ -104,7 +104,7 @@
     const src = (document.currentScript && document.currentScript.src) || '';
     const link = document.createElement('link');
     link.rel = 'stylesheet';
-    link.href = (src ? src.replace(/map\.js(\?.*)?$/, 'map.css') : 'map.css') + '?v=4';
+    link.href = (src ? src.replace(/map\.js(\?.*)?$/, 'map.css') : 'map.css') + '?v=5';
     document.head.append(link);
   } catch (e) { /* ohne CSS weiter */ }
 
@@ -128,6 +128,18 @@
   const fold = $('button', 'map-fold', head);
   fold.type = 'button'; fold.setAttribute('aria-label', 'Karte ein- oder ausklappen'); fold.innerHTML = '<i></i>';
   fold.onclick = () => setOpen(host.dataset.open === 'false');
+
+  // Griff am unteren Rand: Höhe der Karte per Ziehen ändern (wird gemerkt), Doppeltippen = zurücksetzen
+  const grip = $('div', 'map-grip', host);
+  grip.setAttribute('role', 'separator'); grip.setAttribute('aria-label', 'Grösse der Karte ändern'); grip.title = 'Ziehen: Grösse ändern, Doppeltippen: zurücksetzen';
+  const HKEY = 'raffi.mapH';
+  try { const h = +localStorage.getItem(HKEY); if (h >= 120) host.style.height = h + 'px'; } catch (e) {}
+  let dragY = null, startH = 0;
+  grip.onpointerdown = e => { dragY = e.clientY; startH = host.getBoundingClientRect().height; try { grip.setPointerCapture(e.pointerId); } catch (x) {} e.preventDefault(); };
+  grip.onpointermove = e => { if (dragY == null) return; host.style.height = Math.max(120, Math.min(Math.round(innerHeight * 0.72), startH + e.clientY - dragY)) + 'px'; };
+  const endDrag = () => { if (dragY == null) return; dragY = null; try { localStorage.setItem(HKEY, String(Math.round(host.getBoundingClientRect().height))); } catch (e) {} };
+  grip.onpointerup = endDrag; grip.onpointercancel = endDrag;
+  grip.ondblclick = () => { host.style.height = ''; try { localStorage.removeItem(HKEY); } catch (e) {} };
 
   const view = $('div', 'map-view', host);
   const shake = $('div', 'map-shake', view);
@@ -522,6 +534,7 @@
   }
   function setOpen(open) {
     host.dataset.open = open ? 'true' : 'false';
+    if (!open) { host.dataset.savedH = host.style.height; host.style.height = ''; } else if (host.dataset.savedH !== undefined) { host.style.height = host.dataset.savedH; }
     host.classList.toggle('collapsed', !open);
     fold.setAttribute('aria-expanded', open);
     if (open) requestAnimationFrame(doFit);

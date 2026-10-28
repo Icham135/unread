@@ -12,7 +12,7 @@ button{font:inherit}
 
 /* Layout: schmal = Kopf / Karte-Streifen / Chat / Auswahl; breit = Karte links, Chat rechts */
 #app{position:relative;display:flex;flex-direction:column;height:100dvh;max-width:430px;margin:0 auto;background:var(--bg);overflow:hidden}
-#map{flex:0 0 auto;position:relative;height:clamp(300px,46dvh,460px);min-height:0;overflow:hidden;background:#060607;border-bottom:1px solid var(--line)}
+#map{flex:0 0 auto;position:relative;height:clamp(220px,36dvh,340px);min-height:0;overflow:hidden;background:#060607;border-bottom:1px solid var(--line)}
 #map:empty{display:none}
 #map.closed,#map.collapsed,#map[data-open="false"]{height:44px}
 /* Handyformat: auf dem Computer im Handy-Umriss, auf dem Handy bildschirmfüllend */
