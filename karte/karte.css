@@ -1,0 +1,117 @@
+/* Karte von Black Pine House. Wird von karte/karte.js eingebunden.
+   Farben folgen der Oberfläche (--akzent, --bg, --text-3 aus css/style.css), überschreibbar mit --uk-*.
+   Hierarchie: hier (Akzent, Hauch-Fläche, Punkt) > entdeckt (ruhige Haarlinie, Name) > unentdeckt (unsichtbar). */
+.uk-karte {
+  --k-grund: var(--uk-grund, var(--bg, #0b0c0c));
+  --k-akzent: var(--uk-akzent, var(--akzent, #8aa59e));
+  --k-tinte: var(--uk-tinte, #c9cecb);
+  --k-wand: #5f6663;                                   /* Haarlinie entdeckter Räume, 3:1 auf Off-Black */
+  --k-text: var(--uk-text-leise, var(--text-3, #7f8784)); /* Ortsnamen, ca. 5:1 */
+  --k-fern: rgba(201, 206, 203, 0.16);                 /* Zaun und Graben, bewusst leise */
+  --k-ease: var(--ease, cubic-bezier(0.2, 0.7, 0.2, 1));
+  --k-zeit: 2.4s;
+  background: var(--k-grund);
+  color: var(--k-text);
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px calc(env(safe-area-inset-right, 0px) + 12px) calc(env(safe-area-inset-bottom, 0px) + 12px) calc(env(safe-area-inset-left, 0px) + 12px);
+}
+.uk-karte__blatt {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 15rem;
+  max-height: 100%;
+  overflow: visible;
+  font-family: var(--uk-schrift, var(--sans, -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif));
+  -webkit-user-select: none;
+  user-select: none;
+  shape-rendering: geometricPrecision;
+}
+.uk-karte__blatt * { vector-effect: non-scaling-stroke; }
+
+/* Grundstück */
+.uk-karte__zaun {
+  fill: none; stroke: var(--k-fern); stroke-width: 1;
+  stroke-dasharray: 1 4; stroke-linecap: round;
+}
+.uk-karte__og {
+  font-size: calc(9.5px * var(--k-s, 1)); letter-spacing: 0.16em; text-transform: uppercase; fill: var(--k-text);
+  opacity: 0; transition: opacity var(--k-zeit) var(--k-ease);
+}
+.uk-karte--og .uk-karte__og { opacity: 0.8; }
+
+/* Orte: unentdeckt unsichtbar, dann langsames Auftauchen */
+.uk-ort { opacity: 0; transition: opacity var(--k-zeit) var(--k-ease); }
+.uk-ort[data-z="ja"], .uk-ort[data-z="hier"] { opacity: 1; }
+.uk-ort__wand {
+  fill: transparent; stroke: var(--k-wand); stroke-width: 1;
+  transition: stroke var(--k-zeit) var(--k-ease), fill var(--k-zeit) var(--k-ease);
+}
+.uk-ort__linie {
+  fill: none; stroke: var(--k-wand); stroke-width: 1; opacity: 0.85;
+  transition: stroke var(--k-zeit) var(--k-ease), opacity var(--k-zeit) var(--k-ease);
+}
+.uk-ort__weg { stroke-dasharray: 2 4; stroke-linecap: round; }
+.uk-ort__ende { stroke-dasharray: 2 4 2 9 1 16; }
+.uk-ort__graben { stroke: var(--k-fern); opacity: 1; }
+.uk-ort__name {
+  font-size: calc(11px * var(--k-s, 1)); letter-spacing: 0.02em; fill: var(--k-text);
+  transition: fill var(--k-zeit) var(--k-ease);
+}
+.uk-ort__og { opacity: 0; transition: opacity var(--k-zeit) var(--k-ease); }
+.uk-karte--og .uk-ort__og { opacity: 1; }
+.uk-ort .uk-ort__fahrzeug { stroke-dasharray: 2 2; opacity: 0.7; }
+
+.uk-ort[data-z="hier"] .uk-ort__wand { stroke: var(--k-akzent); fill: rgba(138, 165, 158, 0.07); }
+.uk-ort[data-z="hier"] .uk-ort__wand.uk-ort__fahrzeug { fill: transparent; stroke: var(--k-wand); }
+.uk-ort[data-z="hier"] .uk-ort__linie:not(.uk-ort__graben) { stroke: var(--k-akzent); opacity: 0.7; }
+.uk-ort[data-z="hier"] .uk-ort__name { fill: var(--k-akzent); }
+
+/* Mikes Spur: ältere Wege treten zurück, der letzte bleibt klar */
+.uk-karte__weg polyline {
+  stroke: var(--k-akzent); stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round; fill: none;
+  stroke-dasharray: 0 4.5; opacity: 0.32;
+  transition: opacity var(--k-zeit) var(--k-ease);
+}
+.uk-karte__weg polyline.uk-karte__neu { opacity: 0.85; }
+#uk-karte-spur polyline { stroke: #fff; stroke-width: 8; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+
+/* Mike */
+.uk-karte__mike { opacity: 0; transition: opacity 1.2s var(--k-ease); }
+.uk-karte__mike--da { opacity: 1; }
+.uk-karte__punkt { fill: var(--k-akzent); animation: uk-karte-atem 7s ease-in-out infinite; }
+.uk-karte__hauch { fill: none; stroke: var(--k-akzent); stroke-width: 1; opacity: 0; animation: uk-karte-hauch 7s ease-in-out infinite; }
+@keyframes uk-karte-atem { 0%, 100% { opacity: 0.8; } 50% { opacity: 1; } }
+@keyframes uk-karte-hauch { 0%, 100% { opacity: 0; } 50% { opacity: 0.28; } }
+
+/* Mike ist nicht mehr auf dem Blatt */
+.uk-karte__fort {
+  font-size: calc(10.5px * var(--k-s, 1)); letter-spacing: 0.18em; text-transform: uppercase; fill: var(--k-akzent);
+  opacity: 0; pointer-events: none; transition: opacity 4s var(--k-ease);
+}
+.uk-karte__fortgrund { fill: var(--k-grund); stroke: none; }
+.uk-karte__inhalt { transition: opacity 4s var(--k-ease); }
+.uk-karte--fort .uk-karte__inhalt { opacity: 0.16; }
+.uk-karte--fort .uk-karte__mike { opacity: 0; }
+.uk-karte--fort .uk-karte__fort { opacity: 1; }
+
+/* Sofort (Laden, Reset, erster Ort): keine Übergänge */
+.uk-karte--sofort * { transition: none !important; }
+
+/* Hoher Kontrast der Oberfläche */
+[data-kontrast="hoch"] .uk-karte { --k-wand: #8a918e; --k-text: #b4bbb8; --k-fern: rgba(201, 206, 203, 0.32); }
+
+@media (prefers-reduced-motion: reduce) {
+  .uk-karte * { transition: none !important; animation: none !important; }
+  .uk-karte__punkt { opacity: 1; }
+}
+@media (forced-colors: active) {
+  .uk-ort__wand, .uk-ort__linie, .uk-karte__zaun { stroke: CanvasText; }
+  .uk-ort__name, .uk-karte__og, .uk-karte__fort { fill: CanvasText; }
+  .uk-karte__punkt, .uk-karte__weg polyline { fill: Highlight; stroke: Highlight; }
+}

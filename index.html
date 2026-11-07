@@ -1,36 +1,85 @@
 <!doctype html>
+<!-- UNKNOWN – Einstieg. Lädt die Module in der Reihenfolge aus SPEC §1 (klassische Skripte, nacheinander).
+     Fehlt eine Datei, läuft der Rest weiter. Fehlen UK.engine, UK.karte oder UK.medien, öffnet sich ui/demo.html.
+     Neue Engine-Dateien: unten in DATEIEN eintragen (alphabetisch, engine/engine.js zuletzt). -->
 <html lang="de-CH">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#0b0b0d">
-<title>Unread</title>
-<link rel="stylesheet" href="style.css?v=5">
-<link rel="stylesheet" href="map.css">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#0b0c0c">
+  <meta name="color-scheme" content="dark">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="description" content="UNKNOWN: Black Pine House. Ein Chat-Horrorspiel.">
+  <title>UNKNOWN</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="medien/medien.css">
+  <link rel="stylesheet" href="karte/karte.css">
 </head>
 <body>
-<div id="app">
-  <header id="top">
-    <div class="av" aria-hidden="true">M</div>
-    <div class="who"><b>Mike</b><span id="status" class="on" role="status"><i></i><em>Online</em></span></div>
-    <button id="snd" aria-label="Ton an oder aus">Ton an</button>
-  </header>
-  <aside id="map" aria-label="Karte des Hauses"></aside>
-  <main id="chat" aria-live="polite" tabindex="-1"></main>
-  <footer id="bar"><div id="choices"></div></footer>
-  <div id="intro">
-    <div class="box">
-      <h1>Un<span>read</span></h1>
-      <p class="sub">Ein Chat-Horror</p>
-      <p class="warn">Enthält Horror, Kraftausdrücke und einen Tierkadaver.</p>
-      <button id="go">Start</button>
-      <label class="chk"><input type="checkbox" id="sound" checked> Mit Ton (Sprachnachrichten und Geräusche)</label>
-    </div>
-  </div>
-</div>
-<script src="story.js?v=5"></script>
-<script src="sound.js?v=5"></script>
-<script src="map.js?v=5"></script>
-<script src="engine.js?v=5"></script>
+  <div id="uk-root"></div>
+  <noscript><p class="uk-notiz">UNKNOWN braucht JavaScript.</p></noscript>
+  <script>
+    (function () {
+      'use strict';
+      window.UK = window.UK || {};
+      var DATEIEN = [
+        'daten/story.js',
+        // engine/*.js alphabetisch, engine.js zuletzt
+        'engine/ablauf.js',
+        'engine/bedingung.js',
+        'engine/speicher.js',
+        'engine/tempo.js',
+        'engine/engine.js',
+        'medien/medien.js',
+        'karte/karte.js',
+        'ui/ui.js',
+        'main.js'
+      ];
+      var fehlend = [];
+      function lade(i) {
+        if (i >= DATEIEN.length) return fertig();
+        var s = document.createElement('script');
+        s.src = DATEIEN[i];
+        s.async = false;
+        s.onload = function () { lade(i + 1); };
+        s.onerror = function () { fehlend.push(DATEIEN[i]); lade(i + 1); };
+        document.body.appendChild(s);
+      }
+      function fertig() {
+        var UK = window.UK;
+        UK.geladen = { fehlend: fehlend };
+        function fn(o, k) { return !!(o && typeof o[k] === 'function'); }
+        var bereit = UK.story && fn(UK.engine, 'init') && fn(UK.engine, 'start') && fn(UK.karte, 'mount') && fn(UK.medien, 'render') && fn(UK.ui, 'init');
+        if (!bereit) {
+          // Ohne Engine, Karte oder Medien: Vorschau mit Testszene
+          try { window.location.replace('ui/demo.html'); } catch (e) { window.location.href = 'ui/demo.html'; }
+          return;
+        }
+        // main.js startet das Spiel. Falls es fehlt, minimaler Start, damit nichts leer bleibt.
+        var root = document.getElementById('uk-root');
+        function titel() {
+          UK.ui.showTitle({
+            hatSpielstand: !!(UK.engine.hatSpielstand && UK.engine.hatSpielstand()),
+            onStart: function (m) { UK.ui.leere(); UK.engine.start(m); },
+            onFortsetzen: function () { UK.ui.leere(); UK.engine.fortsetzen(); }
+          });
+        }
+        if (!root.firstChild) {
+          try {
+            UK.ui.init(root);
+            UK.engine.init({ story: UK.story, ui: UK.ui, karte: UK.karte, medien: UK.medien, speicher: (function () { try { return window.localStorage; } catch (e) { return null; } })(), onZurueck: titel });
+            UK.ui.setHooks({ onTitel: titel });
+            UK.ui.mountKarteKnopf(function () { });
+            titel();
+          } catch (e) {
+            root.innerHTML = '<p class="uk-notiz">Das Spiel konnte nicht starten.</p>';
+            if (window.console) console.warn('UNKNOWN Start:', e);
+          }
+        }
+      }
+      lade(0);
+    })();
+  </script>
 </body>
 </html>

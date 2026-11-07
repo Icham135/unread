@@ -1,0 +1,200 @@
+/* medien.css: Darstellung für UK.medien (wird von medien.js selbst eingebunden).
+   Farben und Schriften folgen der Oberfläche (css/style.css: --akzent, --text, --linie …), überschreibbar mit --uk-*.
+   Schriftgrössen in rem, damit die Schriftgrösse aus dem Menü auch hier greift. Raster 4 px. */
+.ukm, .ukm-voll {
+  --ukm-flaeche: var(--uk-flaeche, #0e1010);
+  --ukm-linie: var(--uk-linie, var(--linie, rgba(214, 226, 222, 0.10)));
+  --ukm-linie-2: var(--uk-linie-2, var(--linie-2, rgba(214, 226, 222, 0.18)));
+  --ukm-text: var(--uk-text, var(--text, #d9dedc));
+  --ukm-mittel: var(--uk-text-mittel, var(--text-2, #a3aaa7));
+  --ukm-leise: var(--uk-text-leise, var(--text-3, #7f8784));
+  --ukm-akzent: var(--uk-akzent, var(--akzent, #8aa59e));
+  --ukm-akzent-2: rgba(138, 165, 158, 0.38);
+  --ukm-akzent-3: rgba(138, 165, 158, 0.10);
+  --ukm-fokus: var(--fokus, #9fbab3);
+  --ukm-serif: var(--uk-serif, var(--serif, "Iowan Old Style", Charter, Georgia, serif));
+  --ukm-schrift: var(--uk-schrift, var(--sans, -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif));
+  --ukm-ease: var(--ease, cubic-bezier(0.2, 0.7, 0.2, 1));
+  font-family: var(--ukm-schrift);
+  -webkit-font-smoothing: antialiased;
+}
+.ukm { display: block; width: 100%; max-width: 20rem; margin: 0; color: var(--ukm-text); text-align: left; }
+.ukm *, .ukm-voll * { box-sizing: border-box; }
+.ukm button, .ukm-voll button { font: inherit; color: inherit; background: none; border: 0; padding: 0; margin: 0; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.ukm :focus, .ukm-voll :focus { outline: none; }
+.ukm :focus-visible, .ukm-voll :focus-visible { outline: 1px solid var(--ukm-fokus); outline-offset: 2px; border-radius: 6px; }
+
+/* ---------- Foto ---------- */
+.ukm-rahmen {
+  position: relative; display: block; width: 100%; aspect-ratio: 4 / 3;
+  border: 1px solid var(--ukm-linie) !important; border-radius: 12px; overflow: hidden;
+  background: var(--ukm-flaeche) !important; cursor: zoom-in;
+}
+.ukm .ukm-rahmen:focus-visible { outline-offset: -3px; border-radius: 12px; }
+.ukm-flaeche {
+  position: absolute; inset: 0;
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .045 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"),
+    radial-gradient(120% 90% at 50% 40%, rgba(255, 255, 255, 0.025), transparent 70%);
+}
+/* Sucher-Ecken, wie im Kamerabild */
+.ukm-ecken::before, .ukm-ecken::after {
+  content: ""; position: absolute; width: 10px; height: 10px; border-color: rgba(214, 226, 222, 0.24); border-style: solid; border-width: 0;
+  transition: opacity 0.6s var(--ukm-ease);
+}
+.ukm-ecken-o::before { top: 12px; left: 12px; border-top-width: 1px; border-left-width: 1px; }
+.ukm-ecken-o::after { top: 12px; right: 12px; border-top-width: 1px; border-right-width: 1px; }
+.ukm-ecken-u::before { bottom: 12px; left: 12px; border-bottom-width: 1px; border-left-width: 1px; }
+.ukm-ecken-u::after { bottom: 12px; right: 12px; border-bottom-width: 1px; border-right-width: 1px; }
+.ukm-beschrieb {
+  position: absolute; inset: 24px 28px 20px; margin: 0; overflow: hidden;
+  font-family: var(--ukm-serif); font-style: italic; font-size: 0.84375rem; line-height: 1.6; letter-spacing: 0.005em;
+  color: var(--ukm-mittel); text-align: left; text-wrap: pretty;
+  -webkit-mask-image: linear-gradient(to bottom, #000 58%, transparent 98%); mask-image: linear-gradient(to bottom, #000 58%, transparent 98%);
+  transition: opacity 0.7s var(--ukm-ease), color 0.18s var(--ukm-ease);
+}
+.ukm-prueft .ukm-beschrieb, .ukm-prueft .ukm-ecken::before, .ukm-prueft .ukm-ecken::after { opacity: 0; }
+.ukm-hat-bild .ukm-beschrieb, .ukm-hat-bild .ukm-ecken::before, .ukm-hat-bild .ukm-ecken::after { opacity: 0; }
+.ukm-bild { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; opacity: 0; transition: opacity 0.9s var(--ukm-ease), filter 0.18s var(--ukm-ease); }
+.ukm-bild.ukm-da { opacity: 1; }
+@media (hover: hover) {
+  .ukm-rahmen:hover .ukm-beschrieb { color: var(--ukm-text); }
+  .ukm-rahmen:hover .ukm-bild { filter: brightness(1.06); }
+}
+
+.ukm-unterschrift { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 44px; padding: 4px 2px 0; }
+.ukm-titel { flex: 1 1 auto; min-width: 0; font-size: 0.8125rem; line-height: 1.4; color: var(--ukm-mittel); letter-spacing: 0.005em; text-wrap: pretty; }
+.ukm-hinweis { flex: none; font-size: 0.75rem; color: var(--ukm-akzent); letter-spacing: 0.02em; }
+
+/* ---------- Aufklappbare Details ---------- */
+.ukm-details:empty { display: none; }
+.ukm-detail { border-top: 1px solid var(--ukm-linie); }
+.ukm-detail-kopf {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  min-height: 44px; padding: 8px 2px; list-style: none; cursor: pointer;
+  font-size: 0.8125rem; line-height: 1.4; color: var(--ukm-mittel); -webkit-tap-highlight-color: transparent;
+  transition: color 0.18s var(--ukm-ease);
+}
+.ukm-detail-kopf::-webkit-details-marker { display: none; }
+.ukm-detail-kopf::marker { content: ""; }
+.ukm-detail-kopf:hover, .ukm-detail[open] > .ukm-detail-kopf { color: var(--ukm-text); }
+.ukm .ukm-detail-kopf:focus-visible, .ukm-voll .ukm-detail-kopf:focus-visible { outline-offset: -1px; }
+.ukm-zeichen { position: relative; flex: none; width: 9px; height: 9px; }
+.ukm-zeichen::before, .ukm-zeichen::after { content: ""; position: absolute; left: 0; top: 4px; width: 9px; height: 1px; background: var(--ukm-leise); transition: transform 0.35s var(--ukm-ease), opacity 0.35s var(--ukm-ease); }
+.ukm-zeichen::after { transform: rotate(90deg); }
+.ukm-detail[open] .ukm-zeichen::after { transform: rotate(0deg); opacity: 0; }
+.ukm-detail-text { margin: 0 2px 16px; font-size: 0.84375rem; line-height: 1.6; color: var(--ukm-mittel); text-wrap: pretty; }
+.ukm-detail[open] .ukm-detail-text { animation: ukm-ein 0.5s var(--ukm-ease) both; }
+
+/* ---------- Sprachmemo ---------- */
+.ukm-leiste {
+  display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; align-items: center; gap: 12px;
+  padding: 8px 14px 8px 8px; border: 1px solid var(--ukm-linie); border-radius: 12px; background: var(--ukm-flaeche);
+}
+.ukm .ukm-play {
+  position: relative; display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%;
+  border: 1px solid var(--ukm-akzent-2); color: var(--ukm-text);
+  transition: border-color 0.18s var(--ukm-ease), background-color 0.18s var(--ukm-ease);
+}
+.ukm .ukm-play:focus-visible { border-radius: 50%; }
+@media (hover: hover) { .ukm .ukm-play:hover { border-color: var(--ukm-akzent); } }
+.ukm-spielt .ukm-play { background: var(--ukm-akzent-3); border-color: var(--ukm-akzent); }
+.ukm-play svg { width: 14px; height: 14px; fill: currentColor; }
+.ukm-play svg.ukm-play-ikon { margin-left: 2px; }
+/* Wellenform: 44 px hohe Tippfläche, die Balken selbst 28 px */
+.ukm-welle {
+  display: flex; align-items: center; justify-content: space-between; height: 44px; padding: 8px 0;
+  cursor: pointer; touch-action: manipulation; border-radius: 4px;
+}
+.ukm-balken { flex: 0 0 2px; width: 2px; min-height: 2px; border-radius: 1px; background: rgba(214, 226, 222, 0.22); transition: background-color 0.3s var(--ukm-ease); }
+.ukm-balken.ukm-an { background: var(--ukm-akzent); }
+.ukm-dauer { min-width: 2.75em; text-align: right; font-size: 0.75rem; color: var(--ukm-leise); font-variant-numeric: tabular-nums; letter-spacing: 0.02em; }
+.ukm-spielt .ukm-dauer { color: var(--ukm-mittel); }
+.ukm-knopf-text {
+  flex: none; display: inline-flex; align-items: center; min-height: 44px; padding: 0 2px 0 12px !important;
+  font-size: 0.75rem !important; color: var(--ukm-akzent) !important; letter-spacing: 0.02em; white-space: nowrap;
+  transition: color 0.18s var(--ukm-ease);
+}
+@media (hover: hover) { .ukm-knopf-text:hover { color: var(--ukm-text) !important; } }
+.ukm-memo .ukm-unterschrift { padding-top: 2px; }
+
+.ukm-text { list-style: none; margin: 4px 0 12px; padding: 2px 0 2px 14px; border-left: 1px solid var(--ukm-linie-2); }
+.ukm-text[hidden] { display: none; }
+.ukm-zeile {
+  display: grid; grid-template-columns: 2.5em minmax(0, 1fr); gap: 12px; margin: 0 0 8px;
+  font-size: 0.84375rem; line-height: 1.55; color: var(--ukm-mittel); transition: color 0.5s var(--ukm-ease), opacity 0.5s var(--ukm-ease);
+  animation: ukm-ein 0.7s var(--ukm-ease) both;
+}
+.ukm-zeile:last-child { margin-bottom: 0; }
+.ukm-stempel { padding-top: 0.15em; font-size: 0.6875rem; color: var(--ukm-leise); font-variant-numeric: tabular-nums; letter-spacing: 0.02em; transition: color 0.5s var(--ukm-ease); }
+.ukm-regie .ukm-satz { font-style: italic; color: var(--ukm-leise); }
+.ukm-rede { color: var(--ukm-text); }
+.ukm-zeile.ukm-kommt { display: none; }
+.ukm-zeile.ukm-spaeter { opacity: 0.38; }
+.ukm-zeile.ukm-jetzt .ukm-stempel { color: var(--ukm-akzent); }
+.ukm-zeile.ukm-jetzt .ukm-satz { color: var(--ukm-text); }
+
+/* ---------- Im Chat: die Blase der Oberfläche ist der Rahmen (keine doppelten Linien) ---------- */
+.uk-medium .ukm { max-width: none; }
+.uk-medium .ukm-rahmen { border: 0 !important; border-radius: 0; }
+.uk-medium .ukm .ukm-rahmen:focus-visible { border-radius: 0; outline-offset: -4px; }
+.uk-medium .ukm-unterschrift { padding: 4px 12px 0 14px; }
+.uk-medium .ukm-foto .ukm-unterschrift { padding-right: 14px; }
+.uk-medium .ukm-detail { margin: 0 14px; }
+.uk-medium .ukm-detail-kopf { padding-left: 0; padding-right: 0; }
+.uk-medium .ukm-details { padding-bottom: 2px; }
+.uk-medium .ukm-leiste { border: 0; border-radius: 0; background: none; padding: 12px 14px 4px 10px; }
+.uk-medium .ukm-text { margin: 4px 14px 14px; }
+.uk-medium .ukm-detail-text { margin-left: 0; margin-right: 0; }
+
+/* ---------- Vollansicht ---------- */
+.ukm-voll {
+  position: fixed; inset: 0; z-index: 1000; display: flex; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain;
+  padding: max(12px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(32px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+  background: #050606; color: var(--ukm-text);
+  opacity: 0; pointer-events: none; transition: opacity 0.32s var(--ukm-ease);
+}
+.ukm-voll.ukm-voll-eingebettet { position: absolute; }
+.ukm-voll.ukm-auf { opacity: 1; pointer-events: auto; }
+.ukm-voll-innen { width: 100%; max-width: 760px; margin: auto; transform: translateY(6px); transition: transform 0.42s var(--ukm-ease); }
+.ukm-auf .ukm-voll-innen { transform: none; }
+.ukm-voll-innen.ukm-voll-schmal { max-width: 600px; }
+.ukm-voll-kopf { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 56px; padding: 0 0 8px 2px; }
+.ukm-voll-titel { font-family: var(--ukm-serif); font-size: 1.0625rem; line-height: 1.35; color: var(--ukm-text); letter-spacing: 0.005em; }
+.ukm-voll .ukm-zu {
+  flex: none; display: grid; place-items: center; width: 44px; height: 44px; margin-right: -4px; border-radius: 50%;
+  border: 1px solid var(--ukm-linie-2); color: var(--ukm-mittel);
+  transition: border-color 0.18s var(--ukm-ease), color 0.18s var(--ukm-ease);
+}
+.ukm-voll .ukm-zu:focus-visible { border-radius: 50%; }
+@media (hover: hover) { .ukm-voll .ukm-zu:hover { border-color: var(--ukm-akzent); color: var(--ukm-text); } }
+.ukm-zu svg { width: 14px; height: 14px; stroke: currentColor; stroke-width: 1.4; fill: none; stroke-linecap: round; }
+.ukm-voll-bildrahmen { display: flex; justify-content: center; }
+.ukm-voll-bild {
+  display: block; width: auto; max-width: 100%; height: auto; max-height: calc(100vh - 168px); max-height: calc(100dvh - 168px);
+  border-radius: 8px; background: var(--ukm-flaeche); opacity: 0; transition: opacity 0.6s var(--ukm-ease);
+}
+.ukm-voll-bild.ukm-da { opacity: 1; }
+.ukm-voll-text {
+  margin: 0 0 16px; padding: 24px 24px 28px; border: 1px solid var(--ukm-linie); border-radius: 12px; background: var(--ukm-flaeche);
+  font-family: var(--ukm-serif); font-style: italic; font-size: 1rem; line-height: 1.7; color: var(--ukm-mittel); text-wrap: pretty;
+}
+.ukm-voll .ukm-details { margin-top: 16px; }
+.ukm-voll .ukm-detail-kopf { font-size: 0.875rem; }
+.ukm-voll .ukm-detail-text { font-size: 0.90625rem; }
+
+@keyframes ukm-ein { from { opacity: 0; transform: translateY(3px); } to { opacity: 1; transform: none; } }
+
+/* Hoher Kontrast der Oberfläche */
+[data-kontrast="hoch"] .ukm { --ukm-linie: rgba(214, 226, 222, 0.26); --ukm-linie-2: rgba(214, 226, 222, 0.45); --ukm-mittel: #c3c9c6; --ukm-leise: #a3aaa7; }
+[data-kontrast="hoch"] .ukm-balken { background: rgba(214, 226, 222, 0.4); }
+
+@media (prefers-reduced-motion: reduce) {
+  .ukm *, .ukm-voll, .ukm-voll * { transition: none !important; animation: none !important; }
+  .ukm-voll-innen { transform: none; }
+}
+@media (forced-colors: active) {
+  .ukm-balken { background: GrayText; }
+  .ukm-balken.ukm-an { background: Highlight; }
+  .ukm-play, .ukm-zu { border-color: ButtonText; }
+}
