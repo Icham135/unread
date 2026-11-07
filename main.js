@@ -87,6 +87,40 @@
     return true;
   }
 
+  // ---------- Testmodus: nur mit ?test=1 in der URL, unsichtbar, sonst völlig wirkungslos ----------
+  // Alle Wartezeiten null (künstliche Uhr), Pausen der UI ohne Echtzeit. Hilfe: UK.test.antworten(id), .wege(), .ende(), .spiele([ids|Texte]).
+  function testmodus() {
+    if (!/[?&]test=1(&|$)/.test(window.location.search || '')) return;
+    var virtuell = 0;
+    UK.engine.uhr = { jetzt: function () { return virtuell; }, warte: function (ms) { virtuell += Math.max(0, +ms || 0); return new Promise(function (r) { setTimeout(r, 0); }); } };
+    var zp = UK.ui.zeigePause;
+    UK.ui.zeigePause = function (p) { p = p || {}; p.dauer = 0; return zp.call(UK.ui, p); };
+    function knoepfe() { return Array.prototype.slice.call(document.querySelectorAll('.uk-unten .uk-antworten:not(.ist-gewaehlt) .uk-antwort')); }
+    UK.test = {
+      antworten: function (id) { var b = knoepfe().filter(function (k) { return k.getAttribute('data-id') === id; })[0]; if (!b) return false; b.click(); return true; },
+      wege: function () { return knoepfe().map(function (k) { return { id: k.getAttribute('data-id'), text: k.textContent }; }); },
+      ende: function () { var z = UK.engine.zustand(), sz = z && UK.story.szenen[z.szene]; return sz && sz.ende && document.querySelector('.uk-ende.ist-aktiv') ? { nummer: sz.ende.nummer, titel: sz.ende.titel, id: sz.ende.id } : null; },
+      // Spielt einen Antwortweg ab (Antwort-ids oder Antworttexte). Promise -> Ende oder {stopp, bei}
+      spiele: function (liste) {
+        liste = (liste || []).slice();
+        return new Promise(function (fertig) {
+          var leer = 0;
+          (function schritt() {
+            var e = UK.test.ende(); if (e) return fertig(e);
+            var w = UK.test.wege();
+            if (!w.length) { if (++leer > 4000) return fertig({ stopp: 'wartet', bei: UK.engine.zustand().szene }); return setTimeout(schritt, 5); }
+            leer = 0;
+            if (!liste.length) return fertig({ stopp: 'weg zu Ende', bei: UK.engine.zustand().szene });
+            var soll = String(liste.shift()).trim();
+            var t = w.filter(function (x) { return x.id === soll || x.text.indexOf(soll) >= 0; })[0];
+            if (!t) return fertig({ stopp: 'Antwort fehlt: ' + soll, bei: UK.engine.zustand().szene, moeglich: w });
+            UK.test.antworten(t.id); setTimeout(schritt, 5);
+          })();
+        });
+      }
+    };
+  }
+
   try {
     UK.ui.init(root);
     UK.engine.init({
@@ -116,6 +150,7 @@
       if (e.id === wiederkehrDaten().nachEnde) { schreib(K_ENDE4, Date.now()); schreib(K_WIEDER, false); }
     });
 
+    testmodus();
     if (!wiederkehr()) titel();
   } catch (e) {
     root.innerHTML = '<p class="uk-notiz">Das Spiel konnte nicht starten.</p>';

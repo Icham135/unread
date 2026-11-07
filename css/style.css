@@ -122,7 +122,7 @@ h1, h2, h3 { margin: 0; font-weight: inherit; }
 .uk-titel-kopf { flex: 1 0 auto; display: flex; flex-direction: column; justify-content: center; min-height: 11rem; }
 .uk-titel-name {
   font-family: var(--serif); font-weight: 400;
-  font-size: 2.625rem; letter-spacing: 0.34em; /* linksbündig: kein negativer Rand nötig (der erzeugte waagrechten Überlauf) */
+  font-size: 2.375rem; letter-spacing: 0.34em; /* linksbündig: kein negativer Rand nötig (der erzeugte waagrechten Überlauf) */
   line-height: 1; color: var(--text);
 }
 .uk-titel-satz { margin-top: 1.25rem; color: var(--text-2); font-size: 0.9375rem; line-height: 1.6; }
@@ -380,10 +380,11 @@ h1, h2, h3 { margin: 0; font-weight: inherit; }
 .uk-klein { min-height: 2.75rem; padding: 0.375rem 0.875rem; font-size: 0.8125rem; }
 .uk-klein:disabled { opacity: 0.35; }
 .uk-klein:disabled:hover { background: none; border-color: var(--linie-2); }
-.uk-schalter { position: relative; width: 2.75rem; height: 1.625rem; border-radius: 999px; border: 1px solid var(--linie-2); flex: none; transition: border-color var(--t-kurz) var(--ease), background-color var(--t-kurz) var(--ease); }
-.uk-schalter::after { content: ""; position: absolute; top: 0.25rem; left: 0.25rem; width: 1rem; height: 1rem; border-radius: 50%; background: var(--text-3); transition: transform var(--t-mittel) var(--ease), background-color var(--t-mittel) var(--ease); }
-.uk-schalter::before { content: ""; position: absolute; inset: -0.5625rem -0.25rem; } /* Trefferfläche mind. 44 px */
-.uk-schalter[aria-checked="true"] { border-color: var(--akzent); background: var(--akzent-3); }
+/* Schalter: Knopf selbst 44 × 44 px (Trefferfläche), die sichtbare Spur (::before) bleibt schlank */
+.uk-schalter { position: relative; width: 2.75rem; height: 2.75rem; flex: none; border-radius: 999px; }
+.uk-schalter::before { content: ""; position: absolute; left: 0; right: 0; top: 50%; height: 1.625rem; margin-top: -0.8125rem; border-radius: 999px; border: 1px solid var(--linie-2); transition: border-color var(--t-kurz) var(--ease), background-color var(--t-kurz) var(--ease); }
+.uk-schalter::after { content: ""; position: absolute; top: 50%; margin-top: -0.5rem; left: 0.3125rem; width: 1rem; height: 1rem; border-radius: 50%; background: var(--text-3); transition: transform var(--t-mittel) var(--ease), background-color var(--t-mittel) var(--ease); }
+.uk-schalter[aria-checked="true"]::before { border-color: var(--akzent); background: var(--akzent-3); }
 .uk-schalter[aria-checked="true"]::after { transform: translateX(1.125rem); background: var(--akzent); }
 .uk-schalter:disabled { opacity: 0.4; }
 .uk-menue-fuss { display: flex; flex-direction: column; gap: 0.5rem; padding-top: 1.5rem; }
@@ -443,15 +444,17 @@ h1, h2, h3 { margin: 0; font-weight: inherit; }
 @media (forced-colors: active) {
   .uk-blase, .uk-antwort, .uk-wahl, .uk-medium { border: 1px solid CanvasText; }
 }
-@media (max-width: 380px) {
+@media (max-width: 400px) { /* Titel passt bei 390 px ohne Überlauf (Sperrung 0.34em) */
   .uk-titel { padding-left: calc(var(--sa-l) + 1.5rem); padding-right: calc(var(--sa-r) + 1.5rem); }
   .uk-titel-name { font-size: 2.25rem; }
+}
+@media (max-width: 380px) {
   .uk-msg { max-width: 86%; }
 }
 /* Querformat / sehr kurzer Bildschirm: Kopf schlanker, Antworten dürfen etwas mehr Höhe haben */
 @media (max-height: 500px) {
   .uk-kopf { padding-top: calc(var(--sa-o) + 0.25rem); padding-bottom: 0.25rem; }
-  .uk-unten-innen { max-height: 58vh; max-height: 58dvh; }
+  .uk-unten-innen { max-height: 52vh; max-height: 52dvh; }
 }
 @media (max-height: 640px) {
   .uk-titel { padding-top: calc(var(--sa-o) + 2rem); }

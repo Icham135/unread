@@ -33,7 +33,11 @@
     return frag;
   }
   var wenigBewegung = false;
-  try { wenigBewegung = window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { }
+  try {
+    var mqBewegung = window.matchMedia('(prefers-reduced-motion: reduce)');
+    wenigBewegung = mqBewegung.matches;
+    if (mqBewegung.addEventListener) mqBewegung.addEventListener('change', function (e) { wenigBewegung = e.matches; }); // Wechsel in den Einstellungen wirkt sofort
+  } catch (e) { }
 
   var SVG = {
     menue: '<svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 7h12M4 13h12"/></svg>',
@@ -196,6 +200,9 @@
     var nutzer = 0;
     ['wheel', 'touchmove', 'pointerdown', 'keydown'].forEach(function (t) { v.addEventListener(t, function () { nutzer = Date.now(); }, { passive: true }); });
     v.addEventListener('scroll', function () {
+      // Der Leerraum oben (CSS, gegen Layoutsprünge) ist nie sichtbar: höchstens bis zur ersten Zeile hochrollen
+      var erst = S.el.innen.firstElementChild;
+      if (erst) { var min = Math.min(v.scrollHeight - v.clientHeight, erst.offsetTop - 24); if (v.scrollTop < min - 1) v.scrollTop = min; }
       if (istAmBoden()) { S.amBoden = true; S.el.neu.classList.remove('ist-sichtbar'); }
       else if (Date.now() - nutzer < 1200) S.amBoden = false;
     }, { passive: true });
